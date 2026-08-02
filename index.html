@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>twin ♡</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
+body{background:linear-gradient(180deg,#0a1130 0%,#16234f 55%,#1e2f63 100%);overflow:hidden;height:100vh;transition:background 1s ease}
+body.day{background:#bee2ff}
+.stars{position:fixed;inset:0;pointer-events:none;transition:opacity 1s ease}
+body.day .stars{opacity:0}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle 2.5s infinite ease-in-out;
+box-shadow:0 0 8px #fff,0 0 18px #fff,0 0 35px #fff,0 0 60px #fff}
+@keyframes twinkle{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.7)}}
+
+/* brief brighter/faster twinkle, triggered when a heart constellation
+   is completed */
+.stars.celebrate .star{
+  animation:twinkleBright .8s infinite ease-in-out!important;
+}
+@keyframes twinkleBright{
+  0%,100%{opacity:.6;transform:scale(1.1)}
+  50%{opacity:1;transform:scale(2.2)}
+}
+
+/* cursor sparkle trail — only active for a few seconds right after
+   the page loads, then quietly stops */
+.cursor-sparkle{
+  position:fixed;
+  width:6px;height:6px;border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 6px #fff,0 0 12px rgba(255,255,255,.8);
+  pointer-events:none;
+  z-index:9998;
+  transform:translate(-50%,-50%);
+  animation:sparkleFade .7s ease-out forwards;
+}
+@keyframes sparkleFade{
+  0%{opacity:.9;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(.2)}
+}
+
+.theme-toggle{
+  position:fixed;top:18px;right:18px;z-index:50;
+  width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;
+  background:rgba(255,255,255,.35);backdrop-filter:blur(10px);
+  font-size:20px;box-shadow:0 8px 16px rgba(31,59,87,.15);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .3s ease;
+}
+.theme-toggle:active{transform:scale(.9)}
+
+/* heart-shaped custom cursor (non-interactive areas only — buttons/links
+   keep the normal pointer so it's still obvious what's clickable) */
+body{
+  cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 32 32'%3E%3Cpath d='M16 28s-11-7.2-11-15.5C5 7 8.5 4 12 4c2 0 3.6 1 4 2.4C16.4 5 18 4 20 4c3.5 0 7 3 7 8.5C27 20.8 16 28 16 28z' fill='%23ff6b6b' stroke='%23ffffff' stroke-width='1.5'/%3E%3C/svg%3E") 14 14, auto;
+}
+
+/* shooting stars — only spawned in night mode */
+.shooting-star{
+  position:fixed;
+  width:130px;height:2px;
+  background:linear-gradient(90deg, rgba(255,255,255,0), #ffffff);
+  border-radius:2px;
+  z-index:3;
+  pointer-events:none;
+  opacity:0;
+  animation:shootingStar 1.3s ease-in forwards;
+}
+@keyframes shootingStar{
+  0%{opacity:0;transform:translate(0,0) rotate(-32deg)}
+  8%{opacity:1}
+  70%{opacity:1}
+  100%{opacity:0;transform:translate(-420px,320px) rotate(-32deg)}
+}
+
+/* butterflies & fairies — only spawned in day mode, mirroring the
+   shooting stars at night. Drift across with a gentle up/down flutter,
+   rendered as real SVG wings that flap rather than a flat emoji. */
+.day-critter{
+  position:fixed;pointer-events:none;z-index:3;
+  opacity:0;
+  animation:flutterAcross var(--dur,12s) linear forwards;
+}
+.day-critter.fairy{
+  filter:drop-shadow(0 0 6px rgba(255,255,255,.9)) drop-shadow(0 0 12px rgba(255,214,120,.6));
+}
+.day-critter-svg{display:block;width:100%;height:100%}
+@keyframes flutterAcross{
+  0%{opacity:0;transform:translate(0,0)}
+  6%{opacity:1}
+  25%{transform:translate(calc(var(--dx) * 0.25),-18px)}
+  50%{transform:translate(calc(var(--dx) * 0.5),12px)}
+  75%{transform:translate(calc(var(--dx) * 0.75),-14px)}
+  94%{opacity:1}
+  100%{opacity:0;transform:translate(var(--dx),0)}
+}
+
+/* butterfly wing flap — hinges each wing pair toward the body */
+.wing-left,.wing-right{transform-box:fill-box}
+.wing-left{transform-origin:100% 50%;animation:wingFlap .32s ease-in-out infinite}
+.wing-right{transform-origin:0% 50%;animation:wingFlap .32s ease-in-out infinite}
+@keyframes wingFlap{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.38)}}
+
+/* fairy wings — smaller, faster, more delicate flutter */
+.fairy-wing-left,.fairy-wing-right{transform-box:fill-box}
+.fairy-wing-left{transform-origin:100% 50%;animation:fairyWingFlap .12s ease-in-out infinite}
+.fairy-wing-right{transform-origin:0% 50%;animation:fairyWingFlap .12s ease-in-out infinite}
+@keyframes fairyWingFlap{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.55)}}
+
+/* loading screen */
+.loading-screen{
+  position:fixed;inset:0;z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  background:linear-gradient(180deg,#0a1130 0%,#16234f 55%,#1e2f63 100%);
+  transition:opacity .6s ease, visibility .6s ease;
+}
+.loading-screen.hide{opacity:0;visibility:hidden;pointer-events:none}
+.loading-bunny{font-size:56px;animation:bunnyHop .6s ease-in-out infinite}
+@keyframes bunnyHop{
+  0%,100%{transform:translateY(0) scaleY(1)}
+  30%{transform:translateY(-18px) scaleY(1.05)}
+  50%{transform:translateY(0) scaleY(.9)}
+}
+.loading-text{color:#fff;font-weight:600;font-size:14px;letter-spacing:1px;opacity:.85}
+
+/* idle bunny mascot, hopping in the corner, purely decorative */
+.mascot-bunny{
+  position:fixed;bottom:18px;left:18px;z-index:15;
+  font-size:38px;
+  animation:bunnyHop 1.4s ease-in-out infinite;
+  pointer-events:none;
+  user-select:none;
+}
+@media (max-width:480px){
+  .mascot-bunny{font-size:28px;bottom:12px;left:12px}
+}
+
+/* screens now crossfade instead of one being display:none the whole time */
+.screen{
+  position:absolute;inset:0;display:flex;justify-content:center;align-items:center;align-items:safe center;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:30px 0 60px;
+  opacity:0;transform:scale(1.03);
+  pointer-events:none;
+  transition:opacity .8s cubic-bezier(.4,0,.2,1), transform .8s cubic-bezier(.4,0,.2,1);
+}
+.screen.active{opacity:1;transform:scale(1);pointer-events:auto}
+
+.wrap{display:flex;flex-direction:column;align-items:center;gap:24px}
+.photo{width:220px;border-radius:18px;display:block;margin-top:60px}
+.box{
+  position:relative;z-index:1;width:650px;max-width:90vw;padding:60px 55px 55px;
+  margin-top:100px;
+  border-radius:40px;
+  background:rgba(255,255,255,.32);backdrop-filter:blur(18px);text-align:center;
+  box-shadow:0 25px 60px rgba(31,59,87,.18);
+}
+
+/* bunny ears — smooth ellipses rooted at the top-center of the box,
+   flaring gently outward, with soft pink inner-ear glow, real depth
+   via layered shadows, and a slow idle wiggle for life */
+.box::before,.box::after{
+  content:'';
+  position:absolute;
+  top:-108px;
+  width:38px;
+  height:122px;
+  border-radius:50% 50% 45% 45% / 62% 62% 38% 38%;
+  background:
+    radial-gradient(ellipse 12px 58px at 50% 60%, #ffb8d0 0%, #ffb8d0 58%, transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,.2));
+  box-shadow:0 16px 26px rgba(31,59,87,.16), inset 0 0 0 1px rgba(255,255,255,.5);
+  transform-origin:bottom center;
+}
+.box::before{
+  left:calc(50% - 38px);
+  animation:earWiggleLeft 4.5s ease-in-out infinite;
+}
+.box::after{
+  left:calc(50% + 2px);
+  animation:earWiggleRight 4.5s ease-in-out infinite;
+  animation-delay:.25s;
+}
+@keyframes earWiggleLeft{0%,100%{transform:rotate(-13deg)}50%{transform:rotate(-9deg)}}
+@keyframes earWiggleRight{0%,100%{transform:rotate(13deg)}50%{transform:rotate(9deg)}}
+
+.bow{
+  position:absolute;top:-38px;left:50%;transform:translateX(-50%);
+  font-size:26px;filter:drop-shadow(0 4px 8px rgba(31,59,87,.2));
+}
+.greeting{
+  color:#1f3b57;font-weight:600;font-size:16px;
+  margin-bottom:10px;opacity:.85;
+}
+h1{color:#1f3b57;text-shadow:0 0 10px rgba(255,255,255,.9),0 0 20px rgba(255,255,255,.8);margin-bottom:35px}
+
+/* flexbox instead of fixed left/right pixel offsets — those only lined
+   up correctly at one exact box width and collided in the middle on
+   narrower screens */
+.buttons{display:flex;justify-content:space-between;align-items:center}
+button{width:140px;height:58px;border:none;border-radius:999px;color:#fff;font-weight:700;cursor:pointer}
+#yes{background:#1DB954}
+
+/* #no stays in normal flex flow (next to #yes) until the first time you
+   try to catch it — only then does it switch to position:fixed so it
+   can roam the full viewport. */
+#no{
+  background:#ff6b6b;
+  z-index:20;
+  transition:left .18s ease, top .18s ease;
+}
+
+@media (max-width:480px){
+  .box{padding:32px 22px;margin-top:70px}
+  .photo{width:160px}
+  button{width:110px;height:52px;font-size:14px}
+  .box::before,.box::after{width:28px;height:88px;top:-78px}
+  .box::before{left:calc(50% - 28px)}
+  .box::after{left:calc(50% + 2px)}
+  .bow{top:-28px;font-size:20px}
+}
+
+.music-player{
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  margin-bottom:28px;flex-wrap:wrap;
+}
+.music-player button{
+  width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;
+  background:rgba(255,255,255,.35);backdrop-filter:blur(10px);
+  color:#1f3b57;font-size:16px;
+  box-shadow:0 8px 16px rgba(31,59,87,.12);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.music-player button:active{transform:scale(.92)}
+.music-label{color:#1f3b57;font-weight:600;font-size:14px}
+
+/* volume slider with a bunny-face thumb (inline SVG so it renders
+   crisply in every browser, no emoji-font dependency) */
+.volume-slider{
+  -webkit-appearance:none;appearance:none;
+  width:110px;height:10px;border-radius:999px;
+  background:linear-gradient(90deg,#ff9dbb,#ffe3ec);
+  outline:none;cursor:pointer;flex-shrink:0;
+}
+.volume-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:28px;height:28px;border-radius:50%;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cellipse cx='20' cy='14' rx='7' ry='16' fill='white' stroke='%231f3b57' stroke-width='1.2'/%3E%3Cellipse cx='40' cy='14' rx='7' ry='16' fill='white' stroke='%231f3b57' stroke-width='1.2'/%3E%3Cellipse cx='20' cy='17' rx='3' ry='10' fill='%23ffb8d0'/%3E%3Cellipse cx='40' cy='17' rx='3' ry='10' fill='%23ffb8d0'/%3E%3Ccircle cx='30' cy='39' r='18' fill='white' stroke='%231f3b57' stroke-width='1.3'/%3E%3Ccircle cx='24' cy='37' r='2.2' fill='%231f3b57'/%3E%3Ccircle cx='36' cy='37' r='2.2' fill='%231f3b57'/%3E%3Cellipse cx='30' cy='43' rx='2.6' ry='2' fill='%23ff8fab'/%3E%3C/svg%3E");
+  background-size:cover;background-repeat:no-repeat;background-position:center;
+  box-shadow:0 4px 10px rgba(31,59,87,.28);
+  cursor:pointer;
+}
+.volume-slider::-moz-range-thumb{
+  width:28px;height:28px;border-radius:50%;border:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cellipse cx='20' cy='14' rx='7' ry='16' fill='white' stroke='%231f3b57' stroke-width='1.2'/%3E%3Cellipse cx='40' cy='14' rx='7' ry='16' fill='white' stroke='%231f3b57' stroke-width='1.2'/%3E%3Cellipse cx='20' cy='17' rx='3' ry='10' fill='%23ffb8d0'/%3E%3Cellipse cx='40' cy='17' rx='3' ry='10' fill='%23ffb8d0'/%3E%3Ccircle cx='30' cy='39' r='18' fill='white' stroke='%231f3b57' stroke-width='1.3'/%3E%3Ccircle cx='24' cy='37' r='2.2' fill='%231f3b57'/%3E%3Ccircle cx='36' cy='37' r='2.2' fill='%231f3b57'/%3E%3Cellipse cx='30' cy='43' rx='2.6' ry='2' fill='%23ff8fab'/%3E%3C/svg%3E");
+  background-size:cover;background-repeat:no-repeat;background-position:center;
+  box-shadow:0 4px 10px rgba(31,59,87,.28);
+  cursor:pointer;
+}
+.volume-slider::-moz-range-track{
+  height:10px;border-radius:999px;background:linear-gradient(90deg,#ff9dbb,#ffe3ec);
+}
+
+@media (max-width:480px){
+  .volume-slider{width:80px}
+}
+
+.spotify{padding:18px 40px;background:#1DB954;color:#fff;border-radius:999px;text-decoration:none;font-weight:700}
+
+.album{margin-top:34px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.album-frame{
+  position:relative;width:260px;height:260px;border-radius:22px;overflow:hidden;
+  box-shadow:0 18px 34px rgba(31,59,87,.18);
+  background:rgba(255,255,255,.25);
+}
+.album-frame img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  opacity:0;transition:opacity .4s ease;
+}
+.album-frame img.active{opacity:1}
+.album-nav{display:flex;align-items:center;gap:20px}
+.album-nav button{
+  width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;
+  background:rgba(255,255,255,.35);backdrop-filter:blur(10px);
+  color:#1f3b57;font-size:18px;font-weight:700;
+  box-shadow:0 8px 16px rgba(31,59,87,.12);
+}
+.album-nav button:active{transform:scale(.92)}
+.album-counter{color:#1f3b57;font-weight:600;font-size:14px;min-width:44px;text-align:center}
+
+@media (max-width:480px){
+  .album-frame{width:210px;height:210px}
+}
+
+.side-photos-left,.side-photos-right{
+  position:absolute;top:0;height:100%;width:190px;display:none;pointer-events:none;
+}
+.side-photos-left{left:-225px}
+.side-photos-right{right:-225px}
+@media (min-width:1000px){
+  .side-photos-left,.side-photos-right{display:block}
+}
+.scatter-photo{
+  position:absolute;width:150px;border-radius:16px;
+  box-shadow:0 12px 24px rgba(31,59,87,.15);
+}
+
+/* heart/confetti burst on YES click */
+@keyframes heartBurst{
+  0%{transform:translate(0,0) rotate(0deg) scale(.5);opacity:1}
+  100%{transform:translate(var(--tx),var(--ty)) rotate(var(--r)) scale(1);opacity:0}
+}
+.burst-heart{
+  position:fixed;top:0;left:0;
+  font-size:var(--size,22px);
+  pointer-events:none;
+  z-index:9999;
+  animation:heartBurst var(--dur,1.1s) ease-out forwards;
+  will-change:transform,opacity;
+}
+
+.stats{
+  display:flex;justify-content:center;flex-wrap:wrap;gap:14px;
+  margin:36px 0 26px;
+}
+.stat-card{
+  position:relative;
+  background:rgba(255,255,255,.35);backdrop-filter:blur(8px);
+  border-radius:18px;padding:14px 20px;min-width:96px;
+  box-shadow:0 8px 16px rgba(31,59,87,.12);
+}
+.stat-card::before,.stat-card::after{
+  content:'';
+  position:absolute;
+  top:-24px;
+  width:13px;
+  height:32px;
+  border-radius:50% 50% 45% 45% / 62% 62% 38% 38%;
+  background:
+    radial-gradient(ellipse 5px 15px at 50% 60%, #ffb8d0 0%, #ffb8d0 58%, transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.4));
+  box-shadow:0 6px 10px rgba(31,59,87,.14), inset 0 0 0 1px rgba(255,255,255,.55);
+  transform-origin:bottom center;
+}
+.stat-card::before{left:calc(50% - 13px);transform:rotate(-12deg)}
+.stat-card::after{left:calc(50% + 1px);transform:rotate(12deg)}
+.stat-num{font-size:28px;font-weight:800;color:#1f3b57;line-height:1}
+.stat-label{font-size:12px;font-weight:600;color:#1f3b57;margin-top:6px}
+
+@media (max-width:480px){
+  .stats{margin:28px 0 20px}
+  .stat-card{padding:10px 14px;min-width:78px}
+  .stat-card::before,.stat-card::after{width:10px;height:24px;top:-18px}
+  .stat-num{font-size:22px}
+  .stat-label{font-size:10px}
+}
+
+/* growing plant — height, leaf count, and blossom all scale with the
+   real day count, drawn fresh via SVG each time the page loads */
+.plant-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  margin:6px 0 30px;
+}
+.plant-caption{color:#1f3b57;font-weight:600;font-size:13px}
+
+/* certificate button */
+.cert-btn{
+  margin-top:20px;
+  padding:14px 30px;border:none;border-radius:999px;
+  background:linear-gradient(90deg,#ffd166,#ffb84d);
+  color:#5c3d00;font-weight:700;cursor:pointer;font-size:14px;
+  box-shadow:0 8px 16px rgba(31,59,87,.15);
+}
+.cert-btn:active{transform:scale(.96)}
+
+/* the certificate — kept off-screen (not display:none, so it still has
+   real layout and can be captured as an image) during normal browsing.
+   Captured via html2canvas + jsPDF for a direct one-click download; the
+   @media print rule below is only a fallback if those libraries fail
+   to load (no internet at that moment, etc). */
+#certificate{
+  position:fixed;left:-9999px;top:0;z-index:-1;
+  width:700px;padding:40px;background:#fdf6f0;
+}
+.cert-border{
+  position:relative;
+  width:100%;max-width:640px;margin:0 auto;
+  border:3px double #1f3b57;border-radius:14px;
+  padding:55px 45px;text-align:center;background:#fffaf5;
+}
+.cert-ribbon{font-size:34px;margin-bottom:8px}
+.cert-title{font-size:28px;color:#1f3b57;letter-spacing:2px;margin-bottom:20px;font-weight:700}
+.cert-sub{font-size:14px;color:#555;margin:6px 0}
+.cert-names{font-size:26px;font-weight:700;color:#ff6b6b;margin:12px 0}
+.cert-amp{color:#1f3b57;margin:0 10px}
+.cert-date{font-size:20px;font-weight:700;color:#1f3b57;margin:8px 0 22px}
+.cert-seal{font-size:46px;margin-top:8px}
+.cert-footer{font-size:12px;color:#888;margin-top:20px;font-style:italic}
+.cert-serial{
+  position:absolute;top:16px;right:22px;
+  font-size:11px;letter-spacing:1px;color:#a9a9a9;font-weight:600;
+}
+
+@media print{
+  body>*:not(#certificate){display:none!important}
+  #certificate{position:static!important;left:auto!important;width:100%!important}
+  body{background:#fff!important;overflow:visible!important;height:auto!important;cursor:auto!important}
+}
+
+/* constellation — a hidden heart shape traced through the night sky.
+   Only visible/usable at night, same as the shooting stars. */
+.constellation{
+  position:fixed;inset:0;z-index:4;pointer-events:none;
+  transition:opacity 1s ease;
+}
+body.day .constellation{opacity:0}
+.constellation svg{position:absolute;inset:0;width:100%;height:100%}
+.constellation-star{
+  position:absolute;width:14px;height:14px;border-radius:50%;
+  background:#fff;box-shadow:0 0 6px #fff,0 0 14px #fff;
+  transform:translate(-50%,-50%);
+  cursor:pointer;pointer-events:auto;
+  animation:twinkle 2.5s infinite ease-in-out;
+}
+.constellation-star.lit{
+  background:#ffe27a;
+  box-shadow:0 0 10px #ffe27a,0 0 22px #ffe27a,0 0 36px #ffe27a;
+  animation:none;
+}
+.constellation-star.lit::before,.constellation-star.lit::after{
+  content:'';
+  position:absolute;
+  top:-11px;
+  width:5px;
+  height:13px;
+  border-radius:50% 50% 45% 45% / 62% 62% 38% 38%;
+  background:
+    radial-gradient(ellipse 2px 6px at 50% 60%, #ffb8d0 0%, #ffb8d0 58%, transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.55));
+  box-shadow:0 3px 6px rgba(31,59,87,.16);
+  transform-origin:bottom center;
+}
+.constellation-star.lit::before{left:calc(50% - 5px);transform:rotate(-16deg)}
+.constellation-star.lit::after{left:calc(50% + 1px);transform:rotate(16deg)}
+
+/* idle screensaver — dims the page and slowly cycles through the album
+   photos after a stretch of no interaction */
+.idle-overlay{
+  position:fixed;inset:0;z-index:8000;
+  background:rgba(5,10,25,.6);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+  transition:opacity 1.2s ease;
+}
+.idle-overlay.active{opacity:1;pointer-events:auto}
+.idle-photo{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  opacity:0;transition:opacity 1.2s ease;
+}
+.idle-photo.show{opacity:.85}
+.idle-caption{
+  position:relative;z-index:1;color:#fff;font-weight:600;font-size:15px;
+  text-shadow:0 2px 8px rgba(0,0,0,.4);
+  background:rgba(0,0,0,.3);padding:12px 24px;border-radius:999px;
+  backdrop-filter:blur(6px);
+}
+
+/* doodle pad — draws to a canvas, auto-saved to localStorage so it's
+   still there next time the page is opened */
+.doodle-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  margin:10px 0 30px;
+}
+.doodle-label{color:#1f3b57;font-weight:600;font-size:14px}
+.doodle-canvas{
+  display:block;
+  width:min(280px,100%);aspect-ratio:280/200;height:auto;
+  background:#fff;border-radius:18px;
+  box-shadow:0 15px 30px rgba(31,59,87,.18);
+  touch-action:none;cursor:crosshair;
+}
+.doodle-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center}
+.doodle-swatch{
+  width:26px;height:26px;border-radius:50%;border:2px solid #fff;
+  box-shadow:0 2px 6px rgba(31,59,87,.25);cursor:pointer;flex-shrink:0;
+}
+.doodle-swatch.selected{outline:2px solid #1f3b57;outline-offset:2px}
+.doodle-clear-btn{
+  padding:8px 18px;border:none;border-radius:999px;
+  background:rgba(255,255,255,.35);backdrop-filter:blur(8px);
+  color:#1f3b57;font-weight:700;font-size:12px;cursor:pointer;
+  box-shadow:0 6px 12px rgba(31,59,87,.12);
+}
+</style></head><body>
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-bunny">🐰</div>
+  <p class="loading-text">loading…</p>
+</div>
+<button id="themeToggle" class="theme-toggle" aria-label="toggle day and night">☀️</button>
+<div class="mascot-bunny">🐰</div>
+<div class="stars" id="stars"></div>
+<div class="constellation" id="constellation"><svg id="constellationSvg"></svg></div>
+
+<div class="idle-overlay" id="idleOverlay">
+  <img class="idle-photo" id="idlePhotoImg">
+  <p class="idle-caption">still here, twin? 💤 tap to wake me up</p>
+</div>
+
+<div id="certificate">
+  <div class="cert-border">
+    <span class="cert-serial">No. 072</span>
+    <div class="cert-ribbon">🎗️</div>
+    <div class="cert-title">Official Twin Certificate</div>
+    <p class="cert-sub">This certifies that</p>
+    <p class="cert-names">Dodo <span class="cert-amp">&</span> Neptune</p>
+    <p class="cert-sub">have officially been twins since</p>
+    <p class="cert-date" id="certDate">July 29, 2026</p>
+    <div class="cert-seal">🐰</div>
+    <p class="cert-footer">forever twins — no returns or exchanges ♡</p>
+  </div>
+</div>
+
+<div class="screen active" id="intro"><div class="wrap">
+<img src="photos/us1.jpg" class="photo">
+<div class="box"><span class="bow">🎀</span><h1>would you be my twin forever?</h1>
+<div class="buttons"><button id="yes">YES 💚</button><button id="no">NO</button></div></div>
+</div></div>
+
+<div class="screen" id="main"><div class="box">
+<div class="side-photos-left"></div>
+<div class="side-photos-right"></div>
+<span class="bow">🎀</span><p class="greeting" id="greeting"></p><h1 id="mainHeading">i made us a spotify playlist ♡</h1>
+<div class="stats">
+  <div class="stat-card"><div class="stat-num" id="daysNum">–</div><div class="stat-label">days as twins</div></div>
+  <div class="stat-card"><div class="stat-num" id="herBdayNum">–</div><div class="stat-label">neptune's bday</div></div>
+  <div class="stat-card"><div class="stat-num" id="yourBdayNum">–</div><div class="stat-label">dodo's bday</div></div>
+</div>
+
+<div class="plant-wrap">
+  <div id="plantContainer"></div>
+  <p class="plant-caption">growing a little more every day 🌱</p>
+</div>
+
+<button id="certBtn" class="cert-btn">📜 get our certificate</button>
+
+<div class="music-player">
+  <button id="musicToggle" aria-label="play your song">▶</button>
+  <span class="music-label">your song</span>
+  <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="70" aria-label="volume">
+</div>
+<audio id="bgAudio" src="audio/song.mp3" loop preload="auto"></audio>
+
+<a class="spotify" href="https://open.spotify.com/playlist/2likhpoUcGTY6oNW3DCKWi?si=71eab74e0b4547eb&pt=7cd61a52c9df97c96f69c15aa267a73b" target="_blank">Spotify</a>
+
+<div class="album">
+  <div class="album-frame">
+    <img src="photos/album1.jpg" class="active" data-i="0">
+  </div>
+  <div class="album-nav">
+    <button id="albumPrev" aria-label="previous photo">‹</button>
+    <span class="album-counter" id="albumCounter">1 / 17</span>
+    <button id="albumNext" aria-label="next photo">›</button>
+  </div>
+</div>
+
+<div class="doodle-wrap">
+  <p class="doodle-label">leave me something ♡</p>
+  <canvas id="doodleCanvas" class="doodle-canvas" width="280" height="200"></canvas>
+  <div class="doodle-controls">
+    <div class="doodle-swatch" style="background:#bee2ff" data-color="#bee2ff"></div>
+    <div class="doodle-swatch" style="background:#2b6cb0" data-color="#2b6cb0"></div>
+    <div class="doodle-swatch selected" style="background:#1f3b57" data-color="#1f3b57"></div>
+    <div class="doodle-swatch" style="background:#ff6b6b" data-color="#ff6b6b"></div>
+    <div class="doodle-swatch" style="background:#ffb8d0" data-color="#ffb8d0"></div>
+    <div class="doodle-swatch" style="background:#1DB954" data-color="#1DB954"></div>
+    <div class="doodle-swatch" style="background:#ffe14d" data-color="#ffe14d"></div>
+    <button id="doodleClearBtn" class="doodle-clear-btn">clear</button>
+  </div>
+</div>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+// hide the loading screen once things have had a moment to settle,
+// then fully remove it from the DOM so it can never linger or block clicks
+// (placed first, before anything else, so nothing later can prevent it)
+const loadingScreen=document.getElementById('loadingScreen');
+if(loadingScreen){
+  setTimeout(()=>{
+    loadingScreen.classList.add('hide');
+    setTimeout(()=>{ loadingScreen.remove(); },700);
+  },1000);
+}
+
+const s=document.getElementById('stars');
+for(let i=0;i<160;i++){let d=document.createElement('div');d.className='star';let z=Math.random()*5+2;d.style.width=z+'px';d.style.height=z+'px';d.style.left=Math.random()*100+'%';d.style.top=Math.random()*100+'%';d.style.animationDelay=Math.random()*3+'s';s.appendChild(d);}
+
+// constellation — two hidden hearts traced through a handful of the
+// stars, one on the left side of the sky and one on the right. Points
+// are laid out (in %) within each zone; clicking two points connected
+// by an edge in the outline lights up the line between them, in
+// whatever order you click them.
+const constellation=document.getElementById('constellation');
+const constellationSvg=document.getElementById('constellationSvg');
+const HEART_POINTS=[
+  [50,15],[35,0],[20,8],[8,25],[10,45],[20,60],[35,80],
+  [50,100],[65,80],[80,60],[90,45],[92,25],[80,8],[65,0]
+];
+const ZONE_LEFT={leftVW:3,widthVW:34,topVH:9,heightVH:30};
+const ZONE_RIGHT={leftVW:63,widthVW:34,topVH:9,heightVH:30};
+
+function createConstellation(zone){
+  function heartPointPos(p){
+    const leftPct=zone.leftVW+(p[0]/100)*zone.widthVW;
+    const topPct=zone.topVH+(p[1]/100)*zone.heightVH;
+    return {left:`${leftPct}vw`,top:`${topPct}vh`};
+  }
+  const starEls=HEART_POINTS.map((p,i)=>{
+    const el=document.createElement('div');
+    el.className='constellation-star';
+    const pos=heartPointPos(p);
+    el.style.left=pos.left;
+    el.style.top=pos.top;
+    el.style.animationDelay=(Math.random()*2.5)+'s';
+    el.dataset.index=i;
+    constellation.appendChild(el);
+    return el;
+  });
+  const litSet=new Set();
+  const drawnEdges=new Set();
+  function edgeKey(a,b){ return a<b?`${a}-${b}`:`${b}-${a}`; }
+  function tryDrawEdges(idx){
+    const n=HEART_POINTS.length;
+    const neighbors=[(idx-1+n)%n,(idx+1)%n];
+    neighbors.forEach(nb=>{
+      if(litSet.has(nb)){
+        const key=edgeKey(idx,nb);
+        if(!drawnEdges.has(key)){
+          drawnEdges.add(key);
+          drawLine(starEls[idx],starEls[nb]);
+        }
+      }
+    });
+    if(drawnEdges.size===HEART_POINTS.length){
+      const centerX=(zone.leftVW+zone.widthVW/2)/100*innerWidth;
+      const centerY=(zone.topVH+zone.heightVH/2)/100*innerHeight;
+      setTimeout(()=>burstHearts(centerX,centerY),150);
+      const starsEl=document.getElementById('stars');
+      starsEl.classList.add('celebrate');
+      setTimeout(()=>starsEl.classList.remove('celebrate'),3000);
+    }
+  }
+  starEls.forEach((el,i)=>{
+    el.addEventListener('click',()=>{
+      if(litSet.has(i)) return;
+      litSet.add(i);
+      el.classList.add('lit');
+      tryDrawEdges(i);
+    });
+  });
+}
+function drawLine(elA,elB){
+  const ra=elA.getBoundingClientRect(), rb=elB.getBoundingClientRect();
+  const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',ra.left+ra.width/2);
+  line.setAttribute('y1',ra.top+ra.height/2);
+  line.setAttribute('x2',rb.left+rb.width/2);
+  line.setAttribute('y2',rb.top+rb.height/2);
+  line.setAttribute('stroke','#ffe27a');
+  line.setAttribute('stroke-width','1.5');
+  line.setAttribute('opacity','0');
+  constellationSvg.appendChild(line);
+  requestAnimationFrame(()=>{ line.style.transition='opacity .6s ease'; line.setAttribute('opacity','.85'); });
+}
+createConstellation(ZONE_LEFT);
+createConstellation(ZONE_RIGHT);
+
+// time-based greeting on the first screen
+function getGreeting(){
+  const h=new Date().getHours();
+  if(h>=5&&h<12) return 'good morning, twin ☀️';
+  if(h>=12&&h<18) return 'good afternoon, twin 🌤️';
+  if(h>=18&&h<22) return 'good evening, twin 🌆';
+  return 'good night, twin 🌙';
+}
+document.getElementById('greeting').textContent=getGreeting();
+
+// second-screen heading — a different one picked at random each visit
+const MAIN_HEADINGS=[
+  'hi twin, i missed you ♡',
+  'my favorite person just walked in ♡',
+  'looking pretty today twin ♡',
+  'dude what are you waiting for call me ♡',
+  'i\'m so glad you\'re my twin',
+  'coolest person ever is here ♡'
+];
+document.getElementById('mainHeading').textContent=
+  MAIN_HEADINGS[Math.floor(Math.random()*MAIN_HEADINGS.length)];
+
+// soft pop sound on hover/click of the main interactive buttons
+let audioCtx=null;
+function playPop(){
+  try{
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    const o=audioCtx.createOscillator();
+    const g=audioCtx.createGain();
+    o.type='sine';
+    o.frequency.setValueAtTime(650,audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(300,audioCtx.currentTime+.12);
+    g.gain.setValueAtTime(.15,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.16);
+    o.connect(g);g.connect(audioCtx.destination);
+    o.start();o.stop(audioCtx.currentTime+.17);
+  }catch(e){}
+}
+['yes','no','albumPrev','albumNext','musicToggle','themeToggle'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('mouseenter',playPop);
+  el.addEventListener('click',playPop);
+});
+
+// shooting stars — only appear while in night mode
+function spawnShootingStar(){
+  if(document.body.classList.contains('day')) return;
+  const el=document.createElement('div');
+  el.className='shooting-star';
+  el.style.top=(Math.random()*40)+'%';
+  el.style.left=(55+Math.random()*35)+'%';
+  document.body.appendChild(el);
+  el.addEventListener('animationend',()=>el.remove());
+}
+function scheduleShootingStar(){
+  setTimeout(()=>{ spawnShootingStar(); scheduleShootingStar(); },4000+Math.random()*8000);
+}
+scheduleShootingStar();
+
+// butterflies & fairies — only appear while in day mode. Built as real
+// SVG shapes with animated flapping wings rather than flat emoji.
+const BUTTERFLY_COLORS=['#c9a6ff','#ffb0c8','#8ecbff','#ffe07a'];
+
+function butterflySVG(color){
+  return `<svg class="day-critter-svg" viewBox="0 0 60 40">
+    <g class="wing-left">
+      <ellipse cx="18" cy="16" rx="14" ry="9" fill="${color}" transform="rotate(-15 18 16)"/>
+      <ellipse cx="20" cy="26" rx="9" ry="6" fill="${color}" opacity=".85" transform="rotate(-20 20 26)"/>
+      <ellipse cx="16" cy="16" rx="5" ry="3" fill="#fff" opacity=".5" transform="rotate(-15 16 16)"/>
+    </g>
+    <g class="wing-right">
+      <ellipse cx="42" cy="16" rx="14" ry="9" fill="${color}" transform="rotate(15 42 16)"/>
+      <ellipse cx="40" cy="26" rx="9" ry="6" fill="${color}" opacity=".85" transform="rotate(20 40 26)"/>
+      <ellipse cx="44" cy="16" rx="5" ry="3" fill="#fff" opacity=".5" transform="rotate(15 44 16)"/>
+    </g>
+    <ellipse cx="30" cy="20" rx="2.2" ry="11" fill="#3a2b1a"/>
+    <line x1="30" y1="10" x2="26" y2="4" stroke="#3a2b1a" stroke-width="1"/>
+    <line x1="30" y1="10" x2="34" y2="4" stroke="#3a2b1a" stroke-width="1"/>
+    <circle cx="26" cy="4" r="1" fill="#3a2b1a"/>
+    <circle cx="34" cy="4" r="1" fill="#3a2b1a"/>
+  </svg>`;
+}
+function fairySVG(){
+  return `<svg class="day-critter-svg" viewBox="0 0 50 34">
+    <g class="fairy-wing-left"><ellipse cx="17" cy="13" rx="12" ry="7" fill="rgba(255,255,255,.6)" transform="rotate(-22 17 13)"/></g>
+    <g class="fairy-wing-right"><ellipse cx="33" cy="13" rx="12" ry="7" fill="rgba(255,255,255,.6)" transform="rotate(22 33 13)"/></g>
+    <circle cx="25" cy="20" r="7" fill="#ffe27a" opacity=".35"/>
+    <circle cx="25" cy="20" r="4" fill="#ffe9a8"/>
+  </svg>`;
+}
+
+function spawnDayCritter(){
+  if(!document.body.classList.contains('day')) return;
+  const el=document.createElement('div');
+  const isFairy=Math.random()<0.3;
+  el.className='day-critter'+(isFairy?' fairy':'');
+  const size=isFairy?(28+Math.random()*10):(30+Math.random()*18);
+  el.style.width=size+'px';
+  el.style.height=(size*0.62)+'px';
+  el.innerHTML=isFairy?fairySVG():butterflySVG(BUTTERFLY_COLORS[Math.floor(Math.random()*BUTTERFLY_COLORS.length)]);
+  const startFromLeft=Math.random()<0.5;
+  const dx=(startFromLeft?1:-1)*(60+Math.random()*30)+'vw';
+  el.style.left=startFromLeft?'-8vw':'108vw';
+  el.style.top=(10+Math.random()*55)+'vh';
+  el.style.setProperty('--dx',dx);
+  el.style.setProperty('--dur',(isFairy?(12+Math.random()*6):(10+Math.random()*6))+'s');
+  document.body.appendChild(el);
+
+  // fairies trail a soft sparkle behind them as they fly
+  let sparkleInterval=null;
+  if(isFairy){
+    sparkleInterval=setInterval(()=>{
+      const r=el.getBoundingClientRect();
+      spawnCursorSparkle(r.left+r.width/2,r.top+r.height/2);
+    },150);
+  }
+  el.addEventListener('animationend',()=>{
+    if(sparkleInterval) clearInterval(sparkleInterval);
+    el.remove();
+  });
+}
+function scheduleDayCritter(){
+  setTimeout(()=>{ spawnDayCritter(); scheduleDayCritter(); },3500+Math.random()*7000);
+}
+scheduleDayCritter();
+
+const themeToggle=document.getElementById('themeToggle');
+
+function setDayMode(isDay){
+  document.body.classList.toggle('day',isDay);
+  themeToggle.textContent=isDay?'🌙':'☀️';
+}
+
+// auto-detect: daytime is roughly 7am–7pm local time, otherwise night
+const hour=new Date().getHours();
+setDayMode(hour>=7 && hour<19);
+
+themeToggle.onclick=()=>{
+  setDayMode(!document.body.classList.contains('day'));
+};
+
+const no=document.getElementById('no');
+let noIsFixed=false;
+
+function runAway(){
+  // first catch attempt: freeze its current on-screen position, then
+  // reparent it to <body> and switch it to position:fixed.
+  // (it HAS to leave .box: .box has backdrop-filter, and any ancestor
+  // with a filter/backdrop-filter creates a new containing block for
+  // fixed-position descendants — so while #no was still inside .box,
+  // "fixed" was actually being measured against the small box, not the
+  // real viewport, which is why it could fly off past the edge of the
+  // visible page.)
+  if(!noIsFixed){
+    const r=no.getBoundingClientRect();
+    document.body.appendChild(no);
+    no.style.position='fixed';
+    no.style.margin='0';
+    no.style.left=r.left+'px';
+    no.style.top=r.top+'px';
+    no.offsetHeight; // force reflow so the next change animates
+    noIsFixed=true;
+  }
+  const pad=20;
+  const w=no.offsetWidth,h=no.offsetHeight;
+  const x=Math.random()*(innerWidth-w-pad*2)+pad;
+  const y=Math.random()*(innerHeight-h-pad*2)+pad;
+  no.style.left=x+'px';
+  no.style.top=y+'px';
+}
+no.addEventListener('mouseenter',runAway);
+no.addEventListener('touchstart',(e)=>{e.preventDefault();runAway();},{passive:false});
+no.addEventListener('click',(e)=>{e.preventDefault();runAway();});
+
+/* heart burst — a little shower of hearts/bunnies from wherever you
+   clicked, right as the screen starts to fade */
+function burstHearts(originX,originY){
+  const emojis=['💚','💕','🐰','✨'];
+  const count=36;
+  for(let i=0;i<count;i++){
+    const el=document.createElement('span');
+    el.className='burst-heart';
+    el.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    const angle=Math.random()*Math.PI*2;
+    const dist=80+Math.random()*220;
+    const tx=Math.cos(angle)*dist;
+    const ty=Math.sin(angle)*dist-60; // slight upward bias
+    el.style.left=originX+'px';
+    el.style.top=originY+'px';
+    el.style.setProperty('--tx',tx+'px');
+    el.style.setProperty('--ty',ty+'px');
+    el.style.setProperty('--r',(Math.random()*360-180)+'deg');
+    el.style.setProperty('--size',(16+Math.random()*18)+'px');
+    el.style.setProperty('--dur',(0.9+Math.random()*0.6)+'s');
+    document.body.appendChild(el);
+    el.addEventListener('animationend',()=>el.remove());
+  }
+}
+
+/* countdown — change START_DATE to whenever you actually want to count
+   from (the day you met, got together, whatever "twins" means to you) */
+const START_DATE=new Date('2026-07-29');
+const daysTogether=Math.max(0,Math.floor((Date.now()-START_DATE.getTime())/86400000));
+document.getElementById('daysNum').textContent=daysTogether;
+
+/* growing plant — stem height, leaf count, and a blossom all scale up
+   with daysTogether, capped so it looks "fully grown" around 60 days */
+function renderPlant(days){
+  const growth=Math.min(1,days/60);
+  const stemHeight=18+growth*95;
+  const baseX=70,baseY=150,potWidth=70,potHeight=34;
+  const topY=baseY-stemHeight;
+  const maxLeafPairs=5;
+  const leafPairs=days<1?0:Math.min(maxLeafPairs,Math.floor(days/6)+1);
+  let leaves='';
+  for(let i=1;i<=leafPairs;i++){
+    const t=i/(maxLeafPairs+1);
+    const y=baseY-stemHeight*t;
+    const size=10+growth*8;
+    leaves+=`<ellipse cx="${baseX-size}" cy="${y}" rx="${size}" ry="${(size*0.55).toFixed(1)}" transform="rotate(-25 ${baseX-size} ${y})" fill="#6fbf73"/>`;
+    leaves+=`<ellipse cx="${baseX+size}" cy="${y-4}" rx="${size}" ry="${(size*0.55).toFixed(1)}" transform="rotate(25 ${baseX+size} ${y-4})" fill="#7fd487"/>`;
+  }
+  let blossom='';
+  if(days>=30){
+    const bx=baseX,by=topY-6;
+    blossom=`<circle cx="${bx}" cy="${by}" r="6" fill="#ffd166"/>
+      <circle cx="${bx-8}" cy="${by-4}" r="6" fill="#ffb8d0"/>
+      <circle cx="${bx+8}" cy="${by-4}" r="6" fill="#ffb8d0"/>
+      <circle cx="${bx-6}" cy="${by+6}" r="6" fill="#ffb8d0"/>
+      <circle cx="${bx+6}" cy="${by+6}" r="6" fill="#ffb8d0"/>`;
+  }
+  return `<svg viewBox="0 0 140 160" width="120" height="140">
+    <ellipse cx="${baseX}" cy="${baseY+6}" rx="${potWidth/2+6}" ry="8" fill="rgba(31,59,87,.12)"/>
+    <path d="M${baseX-potWidth/2} ${baseY} L${baseX+potWidth/2} ${baseY} L${baseX+potWidth/2-8} ${baseY+potHeight} L${baseX-potWidth/2+8} ${baseY+potHeight} Z" fill="#e8956b"/>
+    <rect x="${baseX-potWidth/2-2}" y="${baseY-6}" width="${potWidth+4}" height="8" rx="3" fill="#d9814f"/>
+    <line x1="${baseX}" y1="${baseY}" x2="${baseX}" y2="${topY}" stroke="#4b8b3b" stroke-width="4" stroke-linecap="round"/>
+    ${leaves}${blossom}
+  </svg>`;
+}
+document.getElementById('plantContainer').innerHTML=renderPlant(daysTogether);
+
+// certificate — filled in with the real start date, then downloaded
+// directly as a PDF (via html2canvas + jsPDF). Falls back to the
+// browser's print dialog if those libraries didn't load for any reason.
+document.getElementById('certDate').textContent=START_DATE.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+
+document.getElementById('certBtn').onclick=async()=>{
+  const certBtn=document.getElementById('certBtn');
+  const originalLabel=certBtn.textContent;
+  certBtn.textContent='making it…';
+  try{
+    if(!window.html2canvas||!window.jspdf) throw new Error('libraries not loaded');
+    const target=document.querySelector('#certificate .cert-border');
+    const canvas=await html2canvas(target,{backgroundColor:'#fffaf5',scale:2});
+    const imgData=canvas.toDataURL('image/png');
+    const {jsPDF}=window.jspdf;
+    const w=canvas.width/2, h=canvas.height/2;
+    const pdf=new jsPDF({orientation:w>h?'landscape':'portrait',unit:'pt',format:[w,h]});
+    pdf.addImage(imgData,'PNG',0,0,w,h);
+    pdf.save('our-twin-certificate.pdf');
+  }catch(e){
+    window.print(); // fallback: manual "save as PDF" via print dialog
+  }finally{
+    certBtn.textContent=originalLabel;
+  }
+};
+
+/* birthday countdowns — days until the next occurrence of each date
+   (month is 1-indexed here: Jan=1, Jul=7). Change these two lines to
+   update the dates. */
+function daysUntil(month,day){
+  const now=new Date();
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  let target=new Date(now.getFullYear(),month-1,day);
+  if(target<today) target=new Date(now.getFullYear()+1,month-1,day);
+  return Math.round((target-today)/86400000);
+}
+document.getElementById('yourBdayNum').textContent=daysUntil(1,2);   // Jan 2
+document.getElementById('herBdayNum').textContent=daysUntil(7,7);   // Jul 7
+
+const intro=document.getElementById('intro');
+const main=document.getElementById('main');
+const bgAudio=document.getElementById('bgAudio');
+const musicToggle=document.getElementById('musicToggle');
+const volumeSlider=document.getElementById('volumeSlider');
+
+bgAudio.volume=volumeSlider.value/100;
+volumeSlider.addEventListener('input',()=>{
+  bgAudio.volume=volumeSlider.value/100;
+});
+
+musicToggle.onclick=()=>{
+  if(bgAudio.paused){ bgAudio.play().catch(()=>{}); }
+  else{ bgAudio.pause(); }
+};
+bgAudio.addEventListener('play',()=>{ musicToggle.textContent='❚❚'; });
+bgAudio.addEventListener('pause',()=>{ musicToggle.textContent='▶'; });
+
+document.getElementById('yes').onclick=()=>{
+  const r=document.getElementById('yes').getBoundingClientRect();
+  burstHearts(r.left+r.width/2, r.top+r.height/2);
+  intro.classList.remove('active');
+  main.classList.add('active');
+  no.style.display='none'; // it may have escaped into <body> earlier to
+                            // dodge .box's backdrop-filter, so fading
+                            // #intro out no longer takes it along — hide
+                            // it explicitly instead
+  // starting playback here (inside a real click handler) counts as a
+  // user gesture, so the browser will allow audio to autoplay with sound
+  bgAudio.play().catch(()=>{ /* if the browser still blocks it, the play button still works */ });
+};
+
+/* photo album — drop your files in /photos/ named album1.jpg, album2.jpg,
+   etc. Just change ALBUM_COUNT to however many photos you have. */
+const ALBUM_COUNT=17;
+const albumPhotos=Array.from({length:ALBUM_COUNT},(_,i)=>`photos/album${i+1}.jpg`);
+let albumIndex=0;
+const albumImg=document.querySelector('.album-frame img');
+const albumCounter=document.getElementById('albumCounter');
+
+function showAlbumPhoto(i){
+  albumImg.classList.remove('active');
+  setTimeout(()=>{
+    albumImg.src=albumPhotos[i];
+    albumImg.classList.add('active');
+    albumCounter.textContent=(i+1)+' / '+albumPhotos.length;
+  },250);
+}
+
+document.getElementById('albumNext').onclick=()=>{
+  albumIndex=(albumIndex+1)%albumPhotos.length;
+  showAlbumPhoto(albumIndex);
+};
+document.getElementById('albumPrev').onclick=()=>{
+  albumIndex=(albumIndex-1+albumPhotos.length)%albumPhotos.length;
+  showAlbumPhoto(albumIndex);
+};
+
+/* scattered side photos — drop files in /photos/ named side1.jpg,
+   side2.jpg, etc. and set SIDE_PHOTO_COUNT to how many you have. Each
+   load, they're shuffled and randomly split between the left and right
+   of the box, with varied height and a slight random tilt. */
+const SIDE_PHOTO_COUNT=6;
+const sidePhotos=Array.from({length:SIDE_PHOTO_COUNT},(_,i)=>`photos/side${i+1}.jpg`);
+
+function scatterSidePhotos(){
+  const shuffled=[...sidePhotos].sort(()=>Math.random()-0.5);
+  const leftList=[],rightList=[];
+  shuffled.forEach((src,i)=>{ (i%2===0?leftList:rightList).push(src); });
+
+  function place(container,list){
+    const n=list.length;
+    list.forEach((src,idx)=>{
+      const img=document.createElement('img');
+      img.src=src;
+      img.className='scatter-photo';
+      const topPct = n>1 ? (idx/(n-1))*68+8 : 40;
+      const jitterTop=(Math.random()*14-7);
+      const jitterLeft=Math.random()*36-18;
+      const rotation=(Math.random()*26-13).toFixed(1);
+      img.style.top=`calc(${topPct}% + ${jitterTop}px)`;
+      img.style.left=jitterLeft+'px';
+      img.style.transform=`rotate(${rotation}deg)`;
+      container.appendChild(img);
+    });
+  }
+  place(document.querySelector('.side-photos-left'),leftList);
+  place(document.querySelector('.side-photos-right'),rightList);
+}
+scatterSidePhotos();
+
+// subtle parallax — stars and photos shift slightly with mouse movement
+// (desktop) or device tilt (mobile), background moving less than the
+// closer elements for a bit of depth
+const parallaxGroups=[
+  {els:document.querySelectorAll('#stars'),depth:6},
+  {els:document.querySelectorAll('.photo'),depth:10},
+  {els:document.querySelectorAll('.side-photos-left'),depth:9},
+  {els:document.querySelectorAll('.side-photos-right'),depth:9},
+  {els:document.querySelectorAll('.album-frame'),depth:7}
+];
+parallaxGroups.forEach(g=>{
+  g.els.forEach(el=>{
+    el.style.transition=el.style.transition?el.style.transition+', transform .15s ease-out':'transform .15s ease-out';
+  });
+});
+function applyParallax(nx,ny){
+  parallaxGroups.forEach(g=>{
+    g.els.forEach(el=>{
+      el.style.transform=`translate(${(nx*g.depth).toFixed(1)}px, ${(ny*g.depth).toFixed(1)}px)`;
+    });
+  });
+}
+
+let parallaxTicking=false,pendingNX=0,pendingNY=0;
+document.addEventListener('mousemove',(e)=>{
+  pendingNX=(e.clientX/window.innerWidth-0.5)*2;
+  pendingNY=(e.clientY/window.innerHeight-0.5)*2;
+  if(!parallaxTicking){
+    parallaxTicking=true;
+    requestAnimationFrame(()=>{ applyParallax(pendingNX,pendingNY); parallaxTicking=false; });
+  }
+});
+
+// device tilt on mobile — uses relative change from first reading so it
+// works regardless of how the phone is held, no calibration needed.
+// Skipped on iOS 13+ since it requires an explicit permission prompt
+// tied to a user gesture, which we don't want to interrupt the page with.
+let parallaxBaseGamma=null,parallaxBaseBeta=null;
+function handleOrientation(e){
+  if(parallaxBaseGamma===null){ parallaxBaseGamma=e.gamma||0; parallaxBaseBeta=e.beta||0; return; }
+  const dGamma=(e.gamma||0)-parallaxBaseGamma;
+  const dBeta=(e.beta||0)-parallaxBaseBeta;
+  applyParallax(Math.max(-1,Math.min(1,dGamma/20)),Math.max(-1,Math.min(1,dBeta/20)));
+}
+if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission!=='function'){
+  window.addEventListener('deviceorientation',handleOrientation);
+}
+
+// cursor sparkle trail — only active for the first few seconds after
+// the page loads, then quietly stops on its own
+let sparkleActive=true;
+let lastSparkleTime=0;
+function spawnCursorSparkle(x,y){
+  const el=document.createElement('div');
+  el.className='cursor-sparkle';
+  el.style.left=x+'px';
+  el.style.top=y+'px';
+  document.body.appendChild(el);
+  el.addEventListener('animationend',()=>el.remove());
+}
+function handleSparkleMove(e){
+  if(!sparkleActive) return;
+  const now=Date.now();
+  if(now-lastSparkleTime<60) return;
+  lastSparkleTime=now;
+  const x=e.touches?e.touches[0].clientX:e.clientX;
+  const y=e.touches?e.touches[0].clientY:e.clientY;
+  spawnCursorSparkle(x,y);
+}
+document.addEventListener('mousemove',handleSparkleMove);
+document.addEventListener('touchmove',handleSparkleMove,{passive:true});
+setTimeout(()=>{
+  sparkleActive=false;
+  document.removeEventListener('mousemove',handleSparkleMove);
+  document.removeEventListener('touchmove',handleSparkleMove);
+},7000);
+
+// idle screensaver — after a stretch with no interaction, dim the page
+// and slowly cross-fade through the album photos. Any interaction
+// (move, tap, scroll, key) wakes it back up immediately.
+const idleOverlay=document.getElementById('idleOverlay');
+const idlePhotoImg=document.getElementById('idlePhotoImg');
+const IDLE_TIMEOUT=45000;
+const IDLE_PHOTO_INTERVAL=5000;
+let idleTimer=null,idleCycleTimer=null,idleIndex=0;
+
+function showIdlePhoto(i){
+  idlePhotoImg.classList.remove('show');
+  setTimeout(()=>{
+    idlePhotoImg.src=albumPhotos[i];
+    idlePhotoImg.classList.add('show');
+  },300);
+}
+function enterIdleMode(){
+  idleOverlay.classList.add('active');
+  idleIndex=0;
+  showIdlePhoto(idleIndex);
+  idleCycleTimer=setInterval(()=>{
+    idleIndex=(idleIndex+1)%albumPhotos.length;
+    showIdlePhoto(idleIndex);
+  },IDLE_PHOTO_INTERVAL);
+}
+function exitIdleMode(){
+  idleOverlay.classList.remove('active');
+  clearInterval(idleCycleTimer);
+}
+function resetIdleTimer(){
+  exitIdleMode();
+  clearTimeout(idleTimer);
+  idleTimer=setTimeout(enterIdleMode,IDLE_TIMEOUT);
+}
+['mousemove','mousedown','touchstart','keydown','scroll','wheel'].forEach(evt=>{
+  document.addEventListener(evt,resetIdleTimer,{passive:true});
+});
+resetIdleTimer();
+
+// doodle pad — draws to canvas, auto-saved to localStorage so it's
+// still there next time this page is opened in the same browser
+const doodleCanvas=document.getElementById('doodleCanvas');
+const doodleCtx=doodleCanvas.getContext('2d');
+let doodleColor='#1f3b57';
+let doodleDrawing=false;
+let doodleLastX=0,doodleLastY=0;
+
+function doodleGetPos(e){
+  const rect=doodleCanvas.getBoundingClientRect();
+  const clientX=e.touches?e.touches[0].clientX:e.clientX;
+  const clientY=e.touches?e.touches[0].clientY:e.clientY;
+  return {
+    x:(clientX-rect.left)*(doodleCanvas.width/rect.width),
+    y:(clientY-rect.top)*(doodleCanvas.height/rect.height)
+  };
+}
+function doodleStart(e){
+  doodleDrawing=true;
+  const p=doodleGetPos(e);
+  doodleLastX=p.x;doodleLastY=p.y;
+}
+function doodleMove(e){
+  if(!doodleDrawing) return;
+  e.preventDefault();
+  const p=doodleGetPos(e);
+  doodleCtx.strokeStyle=doodleColor;
+  doodleCtx.lineWidth=3;
+  doodleCtx.lineCap='round';
+  doodleCtx.beginPath();
+  doodleCtx.moveTo(doodleLastX,doodleLastY);
+  doodleCtx.lineTo(p.x,p.y);
+  doodleCtx.stroke();
+  doodleLastX=p.x;doodleLastY=p.y;
+}
+function doodleEnd(){
+  if(!doodleDrawing) return;
+  doodleDrawing=false;
+  try{ localStorage.setItem('twinDoodle',doodleCanvas.toDataURL()); }catch(e){}
+}
+doodleCanvas.addEventListener('mousedown',doodleStart);
+doodleCanvas.addEventListener('mousemove',doodleMove);
+window.addEventListener('mouseup',doodleEnd);
+doodleCanvas.addEventListener('touchstart',doodleStart,{passive:true});
+doodleCanvas.addEventListener('touchmove',doodleMove,{passive:false});
+doodleCanvas.addEventListener('touchend',doodleEnd);
+
+document.querySelectorAll('.doodle-swatch').forEach(sw=>{
+  sw.addEventListener('click',()=>{
+    document.querySelectorAll('.doodle-swatch').forEach(s=>s.classList.remove('selected'));
+    sw.classList.add('selected');
+    doodleColor=sw.dataset.color;
+  });
+});
+
+try{
+  const savedDoodle=localStorage.getItem('twinDoodle');
+  if(savedDoodle){
+    const img=new Image();
+    img.onload=()=>{ doodleCtx.drawImage(img,0,0); };
+    img.src=savedDoodle;
+  }
+}catch(e){}
+
+document.getElementById('doodleClearBtn').onclick=()=>{
+  doodleCtx.clearRect(0,0,doodleCanvas.width,doodleCanvas.height);
+  try{ localStorage.removeItem('twinDoodle'); }catch(e){}
+};
+</script></body></html>
