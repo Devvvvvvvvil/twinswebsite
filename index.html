@@ -96,7 +96,7 @@ body{
   100%{opacity:0;transform:translate(var(--dx),0)}
 }
 
-/*  wing flap — hinges each wing pair toward the body */
+/* butterfly wing flap — hinges each wing pair toward the body */
 .wing-left,.wing-right{transform-box:fill-box}
 .wing-left{transform-origin:100% 50%;animation:wingFlap .32s ease-in-out infinite}
 .wing-right{transform-origin:0% 50%;animation:wingFlap .32s ease-in-out infinite}
@@ -520,6 +520,10 @@ body.day .constellation{opacity:0}
   color:#1f3b57;font-weight:700;font-size:12px;cursor:pointer;
   box-shadow:0 6px 12px rgba(31,59,87,.12);
 }
+/* eraser button active state */
+.doodle-clear-btn.eraser-active{
+  background:#ff6b6b;color:#fff;
+}
 </style></head><body>
 <div class="loading-screen" id="loadingScreen">
   <div class="loading-bunny">🐰</div>
@@ -603,6 +607,7 @@ body.day .constellation{opacity:0}
     <div class="doodle-swatch" style="background:#ffb8d0" data-color="#ffb8d0"></div>
     <div class="doodle-swatch" style="background:#1DB954" data-color="#1DB954"></div>
     <div class="doodle-swatch" style="background:#ffe14d" data-color="#ffe14d"></div>
+    <button id="doodleEraserBtn" class="doodle-clear-btn">🧹 erase</button>
     <button id="doodleClearBtn" class="doodle-clear-btn">clear</button>
   </div>
 </div>
@@ -1243,6 +1248,7 @@ resetIdleTimer();
 const doodleCanvas=document.getElementById('doodleCanvas');
 const doodleCtx=doodleCanvas.getContext('2d');
 let doodleColor='#1f3b57';
+let doodleEraser=false;
 let doodleDrawing=false;
 let doodleLastX=0,doodleLastY=0;
 
@@ -1264,13 +1270,28 @@ function doodleMove(e){
   if(!doodleDrawing) return;
   e.preventDefault();
   const p=doodleGetPos(e);
-  doodleCtx.strokeStyle=doodleColor;
-  doodleCtx.lineWidth=3;
-  doodleCtx.lineCap='round';
-  doodleCtx.beginPath();
-  doodleCtx.moveTo(doodleLastX,doodleLastY);
-  doodleCtx.lineTo(p.x,p.y);
-  doodleCtx.stroke();
+
+  if(doodleEraser){
+    // erase by drawing with destination-out composite mode
+    doodleCtx.save();
+    doodleCtx.globalCompositeOperation='destination-out';
+    doodleCtx.lineWidth=16;
+    doodleCtx.lineCap='round';
+    doodleCtx.beginPath();
+    doodleCtx.moveTo(doodleLastX,doodleLastY);
+    doodleCtx.lineTo(p.x,p.y);
+    doodleCtx.stroke();
+    doodleCtx.restore();
+  } else {
+    doodleCtx.globalCompositeOperation='source-over';
+    doodleCtx.strokeStyle=doodleColor;
+    doodleCtx.lineWidth=3;
+    doodleCtx.lineCap='round';
+    doodleCtx.beginPath();
+    doodleCtx.moveTo(doodleLastX,doodleLastY);
+    doodleCtx.lineTo(p.x,p.y);
+    doodleCtx.stroke();
+  }
   doodleLastX=p.x;doodleLastY=p.y;
 }
 function doodleEnd(){
@@ -1285,12 +1306,37 @@ doodleCanvas.addEventListener('touchstart',doodleStart,{passive:true});
 doodleCanvas.addEventListener('touchmove',doodleMove,{passive:false});
 doodleCanvas.addEventListener('touchend',doodleEnd);
 
+// color swatches — selecting one turns off eraser mode
 document.querySelectorAll('.doodle-swatch').forEach(sw=>{
   sw.addEventListener('click',()=>{
     document.querySelectorAll('.doodle-swatch').forEach(s=>s.classList.remove('selected'));
     sw.classList.add('selected');
     doodleColor=sw.dataset.color;
+    // turn off eraser when picking a color
+    doodleEraser=false;
+    const eraserBtn=document.getElementById('doodleEraserBtn');
+    eraserBtn.classList.remove('eraser-active');
+    doodleCanvas.style.cursor='crosshair';
   });
+});
+
+// eraser button — toggles eraser mode on/off
+const doodleEraserBtn=document.getElementById('doodleEraserBtn');
+doodleEraserBtn.addEventListener('click',()=>{
+  doodleEraser=!doodleEraser;
+  if(doodleEraser){
+    doodleEraserBtn.classList.add('eraser-active');
+    // deselect all color swatches
+    document.querySelectorAll('.doodle-swatch').forEach(s=>s.classList.remove('selected'));
+    doodleCanvas.style.cursor='cell';
+  } else {
+    doodleEraserBtn.classList.remove('eraser-active');
+    // re-select the default color swatch
+    const defaultSwatch=document.querySelector('.doodle-swatch[data-color="#1f3b57"]');
+    if(defaultSwatch) defaultSwatch.classList.add('selected');
+    doodleColor='#1f3b57';
+    doodleCanvas.style.cursor='crosshair';
+  }
 });
 
 try{
@@ -1304,6 +1350,6 @@ try{
 
 document.getElementById('doodleClearBtn').onclick=()=>{
   doodleCtx.clearRect(0,0,doodleCanvas.width,doodleCanvas.height);
-  try{ localStorage.removeItem('twinDoodle'); }catch(e){}
+  try{ localStorage.removeItem('twinDoodle'); }catch(e){};
 };
 </script></body></html>
