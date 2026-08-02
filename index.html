@@ -136,6 +136,33 @@ body{
   .mascot-bunny{font-size:28px;bottom:12px;left:12px}
 }
 
+/* bunnies hopping across the screen — ground-level, active any time */
+.jumping-bunny{
+  position:fixed;pointer-events:none;z-index:3;user-select:none;
+  opacity:0;
+  animation:bunnyCrossHop var(--dur,8s) ease-in-out forwards;
+}
+.jumping-bunny-svg{display:block;width:100%;height:100%}
+.bunny-leg-back,.bunny-leg-back2{transform-box:fill-box;transform-origin:50% 0%;animation:bunnyLegKick .38s ease-in-out infinite}
+.bunny-leg-front,.bunny-leg-front2{transform-box:fill-box;transform-origin:50% 0%;animation:bunnyArmSwing .38s ease-in-out infinite}
+@keyframes bunnyLegKick{0%,100%{transform:rotate(0deg) scaleY(1)}50%{transform:rotate(-22deg) scaleY(.82)}}
+@keyframes bunnyArmSwing{0%,100%{transform:rotate(0deg)}50%{transform:rotate(16deg)}}
+@keyframes bunnyCrossHop{
+  0%{opacity:0;transform:translate(0,0)}
+  5%{opacity:1}
+  10%{transform:translate(calc(var(--dx) * .1),-22px)}
+  20%{transform:translate(calc(var(--dx) * .2),0)}
+  30%{transform:translate(calc(var(--dx) * .3),-22px)}
+  40%{transform:translate(calc(var(--dx) * .4),0)}
+  50%{transform:translate(calc(var(--dx) * .5),-22px)}
+  60%{transform:translate(calc(var(--dx) * .6),0)}
+  70%{transform:translate(calc(var(--dx) * .7),-22px)}
+  80%{transform:translate(calc(var(--dx) * .8),0)}
+  90%{opacity:1;transform:translate(calc(var(--dx) * .9),-22px)}
+  95%{opacity:1}
+  100%{opacity:0;transform:translate(var(--dx),0)}
+}
+
 /* screens now crossfade instead of one being display:none the whole time */
 .screen{
   position:absolute;inset:0;display:flex;justify-content:center;align-items:center;align-items:safe center;
@@ -806,6 +833,49 @@ function scheduleDayCritter(){
   setTimeout(()=>{ spawnDayCritter(); scheduleDayCritter(); },3500+Math.random()*7000);
 }
 scheduleDayCritter();
+
+// bunnies hopping across the screen — ground-level, active any time.
+// Drawn as a real side-view bunny (body, head, ears, front paws, back
+// legs) rather than a flat emoji, with legs that kick during the hop.
+function bunnySVG(){
+  return `<svg class="jumping-bunny-svg day-critter-svg" viewBox="0 0 80 60">
+    <ellipse class="bunny-leg-back2" cx="18" cy="45" rx="6" ry="9" fill="#f5eef2" stroke="#e5c9d6" stroke-width="1"/>
+    <ellipse class="bunny-leg-back" cx="24" cy="50" rx="8" ry="11" fill="#fff" stroke="#e5c9d6" stroke-width="1"/>
+    <ellipse cx="40" cy="36" rx="17" ry="14" fill="#fff" stroke="#e5c9d6" stroke-width="1"/>
+    <circle cx="24" cy="30" r="5" fill="#fff" stroke="#e5c9d6" stroke-width="1"/>
+    <ellipse class="bunny-leg-front2" cx="42" cy="48" rx="4" ry="7" fill="#f5eef2" stroke="#e5c9d6" stroke-width="1"/>
+    <ellipse class="bunny-leg-front" cx="48" cy="46" rx="4.5" ry="8" fill="#fff" stroke="#e5c9d6" stroke-width="1"/>
+    <circle cx="58" cy="22" r="11" fill="#fff" stroke="#e5c9d6" stroke-width="1"/>
+    <ellipse cx="52" cy="7" rx="4" ry="13" fill="#fff" stroke="#e5c9d6" stroke-width="1" transform="rotate(-14 52 7)"/>
+    <ellipse cx="52" cy="9" rx="1.8" ry="8" fill="#ffb8d0" transform="rotate(-14 52 9)"/>
+    <ellipse cx="63" cy="6" rx="4" ry="13" fill="#fff" stroke="#e5c9d6" stroke-width="1" transform="rotate(12 63 6)"/>
+    <ellipse cx="63" cy="8" rx="1.8" ry="8" fill="#ffb8d0" transform="rotate(12 63 8)"/>
+    <circle cx="62" cy="20" r="1.6" fill="#1f3b57"/>
+    <ellipse cx="66" cy="25" rx="1.6" ry="1.2" fill="#ff8fab"/>
+  </svg>`;
+}
+function spawnJumpingBunny(){
+  const el=document.createElement('div');
+  el.className='jumping-bunny';
+  const startFromLeft=Math.random()<0.5;
+  const size=34+Math.random()*18;
+  el.style.width=size+'px';
+  el.style.height=(size*0.75)+'px';
+  el.innerHTML=bunnySVG();
+  // the bunny is drawn facing right; flip it when hopping right-to-left
+  if(!startFromLeft){ el.querySelector('svg').style.transform='scaleX(-1)'; }
+  const dx=(startFromLeft?1:-1)*(50+Math.random()*35)+'vw';
+  el.style.left=startFromLeft?'-8vw':'108vw';
+  el.style.top=(55+Math.random()*35)+'vh';
+  el.style.setProperty('--dx',dx);
+  el.style.setProperty('--dur',(7+Math.random()*4)+'s');
+  document.body.appendChild(el);
+  el.addEventListener('animationend',()=>el.remove());
+}
+function scheduleJumpingBunny(){
+  setTimeout(()=>{ spawnJumpingBunny(); scheduleJumpingBunny(); },6000+Math.random()*10000);
+}
+scheduleJumpingBunny();
 
 const themeToggle=document.getElementById('themeToggle');
 
