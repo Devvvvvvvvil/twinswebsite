@@ -96,7 +96,7 @@ body{
   100%{opacity:0;transform:translate(var(--dx),0)}
 }
 
-/* butterfly wing flap — hinges each wing pair toward the body */
+/*  wing flap — hinges each wing pair toward the body */
 .wing-left,.wing-right{transform-box:fill-box}
 .wing-left{transform-origin:100% 50%;animation:wingFlap .32s ease-in-out infinite}
 .wing-right{transform-origin:0% 50%;animation:wingFlap .32s ease-in-out infinite}
@@ -769,7 +769,7 @@ scheduleShootingStar();
 
 // butterflies & fairies — only appear while in day mode. Built as real
 // SVG shapes with animated flapping wings rather than flat emoji.
-const BUTTERFLY_COLORS=['#c9a6ff','#ffb0c8','#8ecbff','#ffe07a'];
+const BUTTERFLY_COLORS=['#c9a6ff','#ffb0c8','#8ecbff','#0000FF'];
 
 function butterflySVG(color){
   return `<svg class="day-critter-svg" viewBox="0 0 60 40">
